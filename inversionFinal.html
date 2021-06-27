@@ -1,0 +1,253 @@
+<html lang="es">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Tu mejor inversión</title>
+		<link href="https://images.ctfassets.net/d8tspqmagn8z/3pJiwv2xkhVMyzsG46R6II/40827491da80e607686b831324fcfd25/main_icon.png" rel="shortcut icon" type="image/x-icon">
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/autonumeric/4.1.0/autoNumeric.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/chart.js@3.4.0/dist/chart.min.js"></script>
+		<script type="text/javascript">        
+			const autoNumericOptionsMoney = {
+				digitGroupSeparator        	: '.',
+				decimalCharacter           	: ',',
+				decimalCharacterAlternative	: '.',
+				currencySymbol             	: '$\u202f',
+				currencySymbolPlacement    	: AutoNumeric.options.currencySymbolPlacement.prefix,
+				roundingMethod             	: AutoNumeric.options.roundingMethod.halfUpSymmetric,
+				decimalPlaces				: '2',
+				minimumValue				: '0',
+				maximumValue				: '10000000'
+			};
+			const autoNumericOptionsPercentage = {
+				digitGroupSeparator        	: '.',
+				decimalCharacter           	: ',',
+				decimalCharacterAlternative	: '.',
+				currencySymbol             	: '\u202f%',
+				currencySymbolPlacement    	: AutoNumeric.options.currencySymbolPlacement.suffix,
+				roundingMethod             	: AutoNumeric.options.roundingMethod.halfUpSymmetric,
+				decimalPlaces				: '2',
+				minimumValue				: '0',
+				maximumValue				: '100'
+			};
+			jQuery(function($) {
+				new AutoNumeric(ahorros_saldo, autoNumericOptionsMoney);
+				new AutoNumeric(cdtFisico_saldo, autoNumericOptionsMoney);
+				new AutoNumeric(cdtVirtual_saldo, autoNumericOptionsMoney);
+				
+				new AutoNumeric(ahorros_tasaInteres, autoNumericOptionsPercentage);
+				new AutoNumeric(cdtFisico_tasaInteres, autoNumericOptionsPercentage);
+				new AutoNumeric(cdtVirtual_tasaInteres, autoNumericOptionsPercentage);
+				new AutoNumeric(cdtFisico_puntos, autoNumericOptionsPercentage);
+				
+			});
+			
+			function formular() {
+				$("#ventanaModal").modal("show");
+				$.ajax({
+					method: "POST",
+					url: "https://backinversion.herokuapp.com/formula2",
+					data: JSON.stringify(
+								{
+								ahorros: {
+									saldo: AutoNumeric.getNumber('#ahorros_saldo'),
+									tasaInteres: AutoNumeric.getNumber('#ahorros_tasaInteres'),
+								},
+								cdtFisico: {
+									saldo: AutoNumeric.getNumber('#cdtFisico_saldo'),
+									tasaInteres: AutoNumeric.getNumber('#cdtFisico_tasaInteres'),
+									puntos:  AutoNumeric.getNumber('#cdtFisico_puntos'),
+								},
+								cdtVirtual: {
+									saldo: AutoNumeric.getNumber('#cdtVirtual_saldo'),
+									tasaInteres: AutoNumeric.getNumber('#cdtVirtual_tasaInteres'),
+								},
+								plazo: document.getElementById("plazo").value
+							}
+						),
+					contentType: "application/json"
+				}).done(function(data) {					
+					$('#tasaInteresAhorros').html(document.getElementById("ahorros_tasaInteres").value);
+					
+					$('#rendimientoGeneradoAhorros').html(AutoNumeric.format(data.ahorros.rendimientoGenerados, autoNumericOptionsMoney));
+					$('#reteFuenteAhorros').html(AutoNumeric.format(data.ahorros.retencionFuente, autoNumericOptionsMoney));
+					$('#rendimientoAhorros').html(AutoNumeric.format(data.ahorros.rendimientoNeto, autoNumericOptionsMoney));
+					
+					$('#tasaInteresCDTFisico').html(document.getElementById("cdtFisico_tasaInteres").value);
+					$('#rendimientoGeneradoCDTFisico').html(AutoNumeric.format(data.cdtFisico.rendimientoGenerados, autoNumericOptionsMoney));
+					$('#reteFuenteCDTFisico').html(AutoNumeric.format(data.cdtFisico.retencionFuente, autoNumericOptionsMoney));
+					$('#rendimientoCDTFisico').html(AutoNumeric.format(data.cdtFisico.rendimientoNeto, autoNumericOptionsMoney));
+					
+					$('#tasaInteresCDTVirtual').html(document.getElementById("cdtVirtual_tasaInteres").value);
+					$('#rendimientoGeneradoCDTVirtual').html(AutoNumeric.format(data.cdtVirtual.rendimientoGenerados, autoNumericOptionsMoney));
+					$('#reteFuenteCDTVirtual').html(AutoNumeric.format(data.cdtVirtual.retencionFuente, autoNumericOptionsMoney));
+					$('#rendimientoCDTVirtual').html(AutoNumeric.format(data.cdtVirtual.rendimientoNeto, autoNumericOptionsMoney));
+					
+					$('#plazoRespuesta').html("El plazo es de "+document.getElementById("plazo").value+" días");
+					$("#ventanaModal").modal("hide");
+					$("#formulario").hide();
+					$("#respuesta").show();
+				}).fail(function(data) {
+					alert("Error: "+data); 
+					$("#ventanaModal").modal("hide");
+				})
+			}
+		</script>
+	</head>
+	<body>
+		<nav class="navbar navbar-expand-lg navbar-light bg-light">
+		  <div class="container-fluid">
+		    <a class="navbar-brand" href="" onclick="window.location.reload(true);">
+		      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIkRfXL1xoapgbrH1rhAz94rX7HoOg24UPk4aIbGwLwQqfOXgmeuWslOK22EzpD41b2g&usqp=CAU" alt="" width="220" height="60"/>
+		    </a>
+		  </div>
+		</nav>
+		<div class="container" style="padding: 15px;">
+			<div class="card">
+				<div class="card-header text-center">
+					<h1>Tu Mejor Inversión</h1>
+					<span>La inversión es un aspecto fundamental de las finanzas personales. Invertir tu capital tiene como finalidad obtener una rentabilidad (beneficio) a corto, mediano o largo plazo que te ayudará a crecer tu dinero.</span>
+				</div>
+				<div class="card-body">
+					<div id="formulario">
+						<form action="javascript:void(0);" id="form" onsubmit="formular()" class="row g-3 needs-validation" autocomplete="off">
+							<div class="row">
+								<div class="col-md-4 col-sm-12">
+									<div class="row">
+										<span class="text-center"><h5>CUENTA DE AHORROS</h5></span>
+									</div>
+									<div class="row">
+										<div class="form-floating mb-3">
+											<input type="text" class="form-control" id="ahorros_saldo" placeholder="Valor a invertir" required>
+											<label for="floatingInput">Saldo a Invertir</label>
+											<div class="invalid-feedback">Ingresar el saldo de la cuenta de ahorros</div>
+										</div>
+									</div>
+									<div class="row">
+										<div class="form-floating mb-3">
+											<input type="text" class="form-control" id="ahorros_tasaInteres" value="0.05" required>
+											<label for="floatingInput">Tasa de Interés Cuenta de Ahorros(%)</label>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-4 col-sm-12">
+									<div class="row">
+										<span class="text-center"><h5>CDT FÍSICO</h5></span>
+									</div>
+									<div class="row">
+										<div class="form-floating mb-3">
+											<input type="text" class="form-control" id="cdtFisico_saldo" placeholder="Valor a invertir" required>
+											<label for="floatingInput">Capital a Invertir (desde $1.000.000 de pesos)</label>
+										</div>
+									</div>
+									<div class="row">
+										<div class="form-floating mb-3">
+											<input type="text" class="form-control" id="cdtFisico_tasaInteres" required>
+											<label for="floatingInput">Tasa de Interés CDT Físico(%)</label>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-4 col-sm-12">
+									<div class="row">
+										<span class="text-center"><h5>CDT VIRTUAL</h5></span>
+									</div>
+									<div class="row">
+										<div class="form-floating mb-3">
+											<input type="text" class="form-control" id="cdtVirtual_saldo" placeholder="Valor a invertir" required>
+											<label for="floatingInput">Capital a Invertir (desde $500.000 de pesos)</label>
+										</div>
+									</div>
+									<div class="row">
+										<div class="form-floating mb-3">
+											<input type="text" class="form-control" id="cdtVirtual_tasaInteres" required>
+											<label for="floatingInput">Tasa de Interés CDT Virtual(%)</label>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="form-floating mb-3">
+									<input type="text" class="form-control" name="plazo" id="plazo" required>
+									<label for="floatingInput">Plazo(días)</label>
+								</div>
+							</div>
+							<div class="row">
+								<div class="form-floating mb-3">
+									<input type="text" class="form-control" id="cdtFisico_puntos" required>
+									<label for="floatingInput">Puntos adicionales CDT Físico (%)</label>
+								</div>
+							</div>
+							<div class="text-center">
+								<button type="submit" class="btn btn-primary">Calcular</button>
+							</div>
+						</form>
+					</div>
+					<div id="respuesta" style="display:none">
+						<span id="plazoRespuesta"></span>
+						<div class="row">
+							<div class="table-responsive">
+								<table class="table table-sm">
+									<thead class="text-center">
+										<tr>
+										  <th scope="col">Producto</th>
+										  <th scope="col">Tasa de Interés</th>
+										  <th scope="col">Intereses Generados</th>
+										  <th scope="col">Retención en la Fuente</th>
+										  <th scope="col">Rendimientos Netos</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>Cuenta de Ahorro</td>
+											<td><span id="tasaInteresAhorros"></span></td>
+												<td><span id="rendimientoGeneradoAhorros"></span></td>
+											<td><span id="reteFuenteAhorros"></span></td>
+											<td><span id="rendimientoAhorros"></span></td>
+										</tr>
+										<tr>
+											<td>CDT Físico</td>
+											<td><span id="tasaInteresCDTFisico"></span></td>
+											<td><span id="rendimientoGeneradoCDTFisico"></span></td>
+											<td><span id="reteFuenteCDTFisico"></span></td>
+											<td><span id="rendimientoCDTFisico"></span></td>
+										</tr>
+										<tr>
+											<td>CDT Virtual</td>
+											<td><span id="tasaInteresCDTVirtual"></span></td>
+											<td><span id="rendimientoGeneradoCDTVirtual"></span></td>
+											<td><span id="reteFuenteCDTVirtual"></span></td>
+											<td><span id="rendimientoCDTVirtual"></span></td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<div class="row">
+							<div class="text-center">
+								GRÁFICO
+							</div>
+						</div>
+					</div>
+					
+				</div>
+			</div>
+		</div>
+		
+		<div class="modal fade" id="ventanaModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered text-center">
+				<div class="modal-content" style="border:none;">
+					<div class="modal-body">
+						<h3>
+							<strong>Cargando</strong>
+							<div class="spinner-border" role="status">
+								<span class="visually-hidden">Loading...</span>
+							</div>
+						</h3>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
